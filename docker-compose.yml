@@ -1,0 +1,10 @@
+version: '3'
+services:
+  server:
+    build: .
+    volumes:
+      - .:/src/app
+    ports:
+      - "8081:8081"
+  redis:
+    image: "redis:alpine"

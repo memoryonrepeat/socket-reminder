@@ -1,0 +1,24 @@
+{
+  "name": "socket-reminder",
+  "version": "0.0.1",
+  "description": "Socket server to sent reminder events to clients",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "npm test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/memoryonrepeat/socket-reminder.git"
+  },
+  "author": "Thanh Nguyen <tienthanh8490@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/memoryonrepeat/socket-reminder/issues"
+  },
+  "homepage": "https://github.com/memoryonrepeat/socket-reminder#readme",
+  "dependencies": {
+    "redis": "^3.0.2",
+    "socket.io": "^2.3.0"
+  }
+}
