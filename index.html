@@ -1,0 +1,41 @@
+<html>
+  <head>
+    <title>Socket reminder</title>
+  </head>
+  <body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <div>
+      <form id="reminder_form" action="">
+        <input id="name" autocomplete="off" placeholder="event name" />
+        <input id="time" autocomplete="off" placeholder="time in ISO8601 format, example 2020-09-07T20:30:00.000" />
+        <button type="submit">Send</button>
+      </form>
+    </div>
+    <div id="messages"></div>
+    <script>
+      const socket = io()
+
+      $('#reminder_form').submit(function() {
+        socket.emit('newremind', {
+            // sender: socket.username || socket.id,
+            name: $('#name').val(),
+            time: $('#time').val()
+        })
+        $('#name').val('')
+        $('#time').val('')
+
+        return false
+      });
+
+      socket.on('welcome', (message) => {
+        console.log(message)
+        socket.emit('welcomeback', {welcome: 'back'})
+      })
+
+      socket.on('remind', (message) => {
+        $('#messages').append(`New remind! ${message.name} ${message.time} <br>`)
+      })
+    </script>
+  </body>
+</html>
