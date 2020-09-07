@@ -29,12 +29,20 @@ const app = require('http').createServer(handler)
 const io = require('socket.io')(app)
 const fs = require('fs')
 
+const moment = require('moment')
+
 app.listen(8081)
 
 io.on('connection', (socket) => {
   socket.emit('welcome', {hello: 'world'})
 
   socket.on('newremind', (data) => {
-    socket.emit('remind', {name: data.name, time: data.time})
+    const timeUntilRemind = moment(data.time).diff(moment())
+
+    socket.emit('remind', {name: data.name, time: data.time, timeUntilRemind})
+
+    setTimeout(() => {
+      io.emit('ping', {name: data.name})
+    }, timeUntilRemind)
   })
 })

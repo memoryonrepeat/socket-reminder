@@ -29,12 +29,15 @@
       });
 
       socket.on('welcome', (message) => {
-        console.log(message)
         socket.emit('welcomeback', {welcome: 'back'})
       })
 
       socket.on('remind', (message) => {
-        $('#messages').append(`New remind! ${message.name} ${message.time} <br>`)
+        $('#messages').append(`New remind! ${message.name} ${message.time} ${message.timeUntilRemind} <br>`)
+      })
+
+      socket.on('ping', (message) => {
+        $('#messages').append(`New ping! ${message.name} <br>`)
       })
     </script>
   </body>
