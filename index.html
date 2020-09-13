@@ -5,19 +5,41 @@
   <body>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.28.0/moment.min.js"></script>
+    <div id="currentTime"></div>
     <div>
       <form id="reminder_form" action="">
         <input id="name" autocomplete="off" placeholder="event name" />
-        <input id="time" autocomplete="off" placeholder="time in ISO8601 format, example 2020-09-07T20:30:00.000" />
-        <button type="submit">Send</button>
+        <input id="time" autocomplete="off" placeholder="time in ISO8601 format, example 2020-09-13T18:00:39+02:00" />
+        <button type="submit">Set reminder</button>
       </form>
     </div>
     <div id="messages"></div>
     <script>
+      setInterval(()=>{
+        $('#currentTime').text(`Current time: ${moment().format()}`)
+      }, 1000)
+
       const socket = io()
 
-      $('#reminder_form').submit(function() {
-        socket.emit('newremind', {
+      $('#reminder_form').submit(() => {
+        if (!$('#name').val()){
+          return alert('Event name must be defined')
+        }
+
+        if (!$('#time').val()){
+          return alert('Event time must be defined')
+        }
+
+        if (moment($('#time').val()).isValid() === false) {
+          return alert('Event time must be valid. Use current time as an example.')
+        }
+
+        if (moment($('#time').val()).diff(moment()) <= 0) {
+          return alert('Event time must be in future.')
+        }        
+
+        socket.emit('remindRequest', {
             // sender: socket.username || socket.id,
             name: $('#name').val(),
             time: $('#time').val()
@@ -26,18 +48,14 @@
         $('#time').val('')
 
         return false
-      });
-
-      socket.on('welcome', (message) => {
-        socket.emit('welcomeback', {welcome: 'back'})
       })
 
-      socket.on('remind', (message) => {
-        $('#messages').append(`New remind! ${message.name} ${message.time} ${message.timeUntilRemind} <br>`)
+      socket.on('remindConfirmation', (message) => {
+        $('#messages').append(`Remind request confirmed! Event: ${message.name}. Time: ${message.time}. Coming in ${moment.duration(message.timeUntilRemind).seconds()} seconds <br>`)
       })
 
-      socket.on('ping', (message) => {
-        $('#messages').append(`New ping! ${message.name} <br>`)
+      socket.on('incomingRemind', (message) => {
+        $('#messages').append(`New remind! Event: ${message.name} <br>`)
       })
     </script>
   </body>

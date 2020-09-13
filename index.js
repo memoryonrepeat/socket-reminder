@@ -1,16 +1,7 @@
-/* const redis = require('redis')
+const redis = require('redis')
 const client = redis.createClient({host: 'redis'})
+const SERVER_PORT = 8081
 
-client.on('ready', function (error) {
-  console.log('redis client is ready.....')
-})
-
-client.on('error', function (error) {
-  console.error(error)
-})
-
-console.log('server started!.....')
-*/
 const handler = (req, res) => {
   fs.readFile(
     __dirname + '/index.html',
@@ -25,24 +16,36 @@ const handler = (req, res) => {
     }
   )
 }
+
 const app = require('http').createServer(handler)
 const io = require('socket.io')(app)
 const fs = require('fs')
 
 const moment = require('moment')
 
-app.listen(8081)
-
 io.on('connection', (socket) => {
   socket.emit('welcome', {hello: 'world'})
 
-  socket.on('newremind', (data) => {
+  socket.on('remindRequest', (data) => {
     const timeUntilRemind = moment(data.time).diff(moment())
 
-    socket.emit('remind', {name: data.name, time: data.time, timeUntilRemind})
+    // TODO: Write remind to DB
+    socket.emit('remindConfirmation', {name: data.name, time: data.time, timeUntilRemind})
 
     setTimeout(() => {
-      io.emit('ping', {name: data.name})
+      io.emit('incomingRemind', {name: data.name})
+      // TODO: Remove remind from DB
     }, timeUntilRemind)
   })
 })
+
+client.on('ready', (error) => {
+  // TODO: Fetch pending reminds from DB
+  console.log('redis client is ready.....')
+})
+
+client.on('error', (error) => {
+  console.error(error)
+})
+
+app.listen(SERVER_PORT)
