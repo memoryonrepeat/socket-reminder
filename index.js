@@ -1,7 +1,9 @@
 const redis = require('redis')
-const client = redis.createClient({host: 'redis'})
+const moment = require('moment')
+const fs = require('fs')
 const SERVER_PORT = 8081
 
+const client = redis.createClient({host: 'redis'})
 const handler = (req, res) => {
   fs.readFile(
     __dirname + '/index.html',
@@ -19,13 +21,8 @@ const handler = (req, res) => {
 
 const app = require('http').createServer(handler)
 const io = require('socket.io')(app)
-const fs = require('fs')
-
-const moment = require('moment')
 
 io.on('connection', (socket) => {
-  socket.emit('welcome', {hello: 'world'})
-
   socket.on('remindRequest', (data) => {
     const timeUntilRemind = moment(data.time).diff(moment())
 
@@ -41,11 +38,11 @@ io.on('connection', (socket) => {
 })
 
 client.on('ready', (error) => {
-  // TODO: Fetch pending reminds from DB and set time out
   console.log('redis client is ready.....')
 
   client.hgetall('reminders', (err, res) => {
-    console.log(res)
+    console.log('Pending reminders', res)
+
     for (const key in res) {
       const timeUntilRemind = moment(res[key]).diff(moment())
 
@@ -61,7 +58,9 @@ client.on('ready', (error) => {
 })
 
 client.on('error', (error) => {
-  console.error(error)
+  console.error('Redis server failure', error)
 })
 
 app.listen(SERVER_PORT)
+
+module.exports = app

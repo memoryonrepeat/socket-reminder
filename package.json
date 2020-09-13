@@ -4,8 +4,7 @@
   "description": "Socket server to sent reminder events to clients",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "test": "npm test"
+    "start": "node index.js"
   },
   "repository": {
     "type": "git",
