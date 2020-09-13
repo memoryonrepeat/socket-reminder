@@ -29,19 +29,35 @@ io.on('connection', (socket) => {
   socket.on('remindRequest', (data) => {
     const timeUntilRemind = moment(data.time).diff(moment())
 
-    // TODO: Write remind to DB
-    socket.emit('remindConfirmation', {name: data.name, time: data.time, timeUntilRemind})
+    client.hset('reminders', data.name, data.time, redis.print)
+
+    socket.emit('remindConfirmation', {name: data.name, time: data.time})
 
     setTimeout(() => {
       io.emit('incomingRemind', {name: data.name})
-      // TODO: Remove remind from DB
+      client.hdel('reminders', data.name, redis.print)
     }, timeUntilRemind)
   })
 })
 
 client.on('ready', (error) => {
-  // TODO: Fetch pending reminds from DB
+  // TODO: Fetch pending reminds from DB and set time out
   console.log('redis client is ready.....')
+
+  client.hgetall('reminders', (err, res) => {
+    console.log(res)
+    for (const key in res) {
+      const timeUntilRemind = moment(res[key]).diff(moment())
+
+      if (timeUntilRemind > 0) {
+        console.log('setting reminder', key, res[key], timeUntilRemind)
+        setTimeout(() => {
+          io.emit('incomingRemind', {name: key})
+          client.hdel('reminders', key, redis.print)
+        }, timeUntilRemind)
+      }
+    }
+  })
 })
 
 client.on('error', (error) => {

@@ -51,7 +51,7 @@
       })
 
       socket.on('remindConfirmation', (message) => {
-        $('#messages').append(`Remind request confirmed! Event: ${message.name}. Time: ${message.time}. Coming in ${moment.duration(message.timeUntilRemind).seconds()} seconds <br>`)
+        $('#messages').append(`Remind request confirmed! Event: ${message.name}. Time: ${message.time}`)
       })
 
       socket.on('incomingRemind', (message) => {
