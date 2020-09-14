@@ -4,4 +4,4 @@ Service data is persistent on restart.
 
 Prerequisite: [Docker compose](https://docs.docker.com/compose/install/)
 
-To run: `docker-compose up --build` --> go to `http://localhost:8081/`
+To run: `docker-compose up` --> go to `http://localhost:8081/`

@@ -3,10 +3,10 @@ const moment = require('moment')
 const fs = require('fs')
 const SERVER_PORT = 8081
 
-const client = redis.createClient({host: 'redis'})
+const redisClient = redis.createClient({host: 'redis'})
 const handler = (req, res) => {
   fs.readFile(
-    __dirname + '/index.html',
+    `${__dirname}/index.html`,
     (err, data) => {
       if (err) {
         res.writeHead(500)
@@ -26,38 +26,49 @@ io.on('connection', (socket) => {
   socket.on('remindRequest', (data) => {
     const timeUntilRemind = moment(data.time).diff(moment())
 
-    client.hset('reminders', data.name, data.time, redis.print)
+    if (timeUntilRemind > 0) {
+      console.log('Setting reminder', data.name, data.time, timeUntilRemind)
 
-    socket.emit('remindConfirmation', {name: data.name, time: data.time})
+      redisClient.hset('reminders', data.name, data.time, redis.print)
 
-    setTimeout(() => {
-      io.emit('incomingRemind', {name: data.name})
-      client.hdel('reminders', data.name, redis.print)
-    }, timeUntilRemind)
+      socket.emit('remindConfirmation', {name: data.name, time: data.time})
+
+      setTimeout(() => {
+        io.emit('incomingRemind', {name: data.name})
+        redisClient.hdel('reminders', data.name, redis.print)
+      }, timeUntilRemind)
+    }
   })
 })
 
-client.on('ready', (error) => {
-  console.log('redis client is ready.....')
+redisClient.on('ready', () => {
+  console.log('Redis client is ready.....')
 
-  client.hgetall('reminders', (err, res) => {
+  redisClient.hgetall('reminders', (err, res) => {
+    if (err) {
+      console.log('Error while fetching pending reminders', err)
+
+      return
+    }
+
     console.log('Pending reminders', res)
 
     for (const key in res) {
       const timeUntilRemind = moment(res[key]).diff(moment())
 
       if (timeUntilRemind > 0) {
-        console.log('setting reminder', key, res[key], timeUntilRemind)
+        console.log('Setting reminder', key, res[key], timeUntilRemind)
+
         setTimeout(() => {
           io.emit('incomingRemind', {name: key})
-          client.hdel('reminders', key, redis.print)
+          redisClient.hdel('reminders', key, redis.print)
         }, timeUntilRemind)
       }
     }
   })
 })
 
-client.on('error', (error) => {
+redisClient.on('error', (error) => {
   console.error('Redis server failure', error)
 })
 
